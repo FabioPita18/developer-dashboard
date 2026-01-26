@@ -305,3 +305,14 @@ static/
 *.temp
 tmp/
 temp/
+
+# ==================================
+# Claude Code - LOCAL DEVELOPMENT ONLY
+# ==================================
+# These files are for local Claude Code workflow and should NOT be tracked in git.
+# They contain project context and development prompts specific to your local setup.
+.claude/
+.claudeignore
+CLAUDE.md
+**/CLAUDE.md
+PHASE*-PROMPT.md
