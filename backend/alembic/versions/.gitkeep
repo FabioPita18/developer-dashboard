@@ -1,0 +1,2 @@
+# This file ensures the versions directory is tracked by git
+# Alembic will generate migration files here

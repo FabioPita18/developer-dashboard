@@ -1,0 +1,65 @@
+/**
+ * Global Styles + Tailwind CSS
+ *
+ * Import order matters:
+ * 1. Tailwind base - CSS reset and base styles
+ * 2. Tailwind components - Component classes
+ * 3. Tailwind utilities - Utility classes
+ * 4. Custom styles - Our additions
+ *
+ * Learning Notes:
+ * - @tailwind directives import Tailwind's CSS at build time
+ * - @layer lets us organize custom CSS into Tailwind's layer system
+ * - This ensures proper specificity and ordering of styles
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base layer customizations */
+@layer base {
+  /* Smooth transitions for dark mode */
+  html {
+    @apply transition-colors duration-200;
+  }
+
+  /* Default body styles */
+  body {
+    @apply bg-gray-50 text-gray-900;
+    @apply dark:bg-gray-900 dark:text-gray-100;
+    @apply min-h-screen antialiased;
+  }
+}
+
+/* Component layer - reusable classes */
+@layer components {
+  /* Card component - used throughout the dashboard */
+  .card {
+    @apply bg-white dark:bg-gray-800;
+    @apply border border-gray-200 dark:border-gray-700;
+    @apply rounded-lg shadow-sm p-6;
+  }
+
+  /* Base button styles */
+  .btn {
+    @apply inline-flex items-center justify-center;
+    @apply px-4 py-2 rounded-lg font-medium;
+    @apply transition-colors duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Primary button variant */
+  .btn-primary {
+    @apply btn bg-primary-600 text-white;
+    @apply hover:bg-primary-700 focus:ring-primary-500;
+  }
+
+  /* Secondary button variant */
+  .btn-secondary {
+    @apply btn bg-gray-200 text-gray-800;
+    @apply dark:bg-gray-700 dark:text-gray-200;
+    @apply hover:bg-gray-300 dark:hover:bg-gray-600;
+    @apply focus:ring-gray-500;
+  }
+}

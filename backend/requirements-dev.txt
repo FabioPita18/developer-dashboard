@@ -1,0 +1,60 @@
+# =============================================================================
+# Developer Dashboard - Development Dependencies
+# =============================================================================
+# Install with: pip install -r requirements-dev.txt
+# This also installs production dependencies.
+
+# Include production dependencies
+-r requirements.txt
+
+# =============================================================================
+# Testing
+# =============================================================================
+
+# pytest is a mature full-featured Python testing tool.
+pytest==7.4.4
+
+# pytest-asyncio enables pytest to run async tests.
+pytest-asyncio==0.23.3
+
+# pytest-cov provides test coverage reporting.
+pytest-cov==4.1.0
+
+# aiosqlite provides async SQLite support for testing.
+# We use SQLite in tests for speed and simplicity.
+aiosqlite==0.19.0
+
+# =============================================================================
+# Code Quality
+# =============================================================================
+
+# black is an opinionated code formatter.
+# "Any color you like, as long as it's black."
+black==24.1.1
+
+# isort sorts Python imports alphabetically and by section.
+isort==5.13.2
+
+# flake8 is a tool for style guide enforcement.
+flake8==7.0.0
+
+# mypy is a static type checker for Python.
+mypy==1.8.0
+
+# =============================================================================
+# Security
+# =============================================================================
+
+# pip-audit checks for known vulnerabilities in dependencies.
+pip-audit==2.7.0
+
+# =============================================================================
+# Development Utilities
+# =============================================================================
+
+# IPython provides an enhanced interactive Python shell.
+ipython==8.20.0
+
+# httpx CLI for testing API endpoints from command line.
+# Already installed via httpx, but the [cli] extra adds the command.
+httpx[cli]==0.26.0

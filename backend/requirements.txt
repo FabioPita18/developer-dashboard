@@ -1,0 +1,53 @@
+# =============================================================================
+# Developer Dashboard - Production Dependencies
+# =============================================================================
+
+# Web Framework
+# FastAPI is a modern, fast (high-performance) web framework for building APIs
+# with Python 3.7+ based on standard Python type hints.
+fastapi==0.109.0
+
+# ASGI Server
+# Uvicorn is a lightning-fast ASGI server implementation, using uvloop and httptools.
+# The [standard] extra includes uvloop for better performance.
+uvicorn[standard]==0.27.0
+
+# Database ORM
+# SQLAlchemy 2.0 with native async support and improved type hints.
+# Uses the new Mapped[] and mapped_column() syntax.
+sqlalchemy==2.0.25
+
+# PostgreSQL Async Driver
+# asyncpg is a fast PostgreSQL database client library for Python/asyncio.
+# Required for async SQLAlchemy with PostgreSQL.
+asyncpg==0.29.0
+
+# Database Migrations
+# Alembic is a database migration tool for SQLAlchemy.
+# Used to version control database schema changes.
+alembic==1.13.1
+
+# Data Validation
+# Pydantic v2 provides data validation using Python type annotations.
+# Major performance improvements over v1.
+pydantic==2.5.3
+
+# Settings Management
+# pydantic-settings allows loading configuration from environment variables.
+# Separate package in Pydantic v2 (was part of core in v1).
+pydantic-settings==2.1.0
+
+# HTTP Client
+# httpx is a fully featured HTTP client for Python 3, with async support.
+# Used for making requests to the GitHub API.
+httpx==0.26.0
+
+# JWT Authentication
+# python-jose provides JSON Web Token encoding and decoding.
+# The [cryptography] extra provides better performance and security.
+python-jose[cryptography]==3.3.0
+
+# Environment Variables
+# python-dotenv loads environment variables from .env files.
+# Useful for local development.
+python-dotenv==1.0.0
