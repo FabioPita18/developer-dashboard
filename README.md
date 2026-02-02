@@ -1,468 +1,301 @@
 # Developer Dashboard
 
-> GitHub analytics and contribution visualization dashboard with real-time data insights
+> Full-stack GitHub analytics dashboard — visualize contributions, languages, and coding patterns.
 
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://developer-dashboard.vercel.app)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109.0-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Backend CI](https://github.com/fabiograsso/developer-dashboard/actions/workflows/backend.yml/badge.svg)](https://github.com/fabiograsso/developer-dashboard/actions/workflows/backend.yml)
+[![Frontend CI](https://github.com/fabiograsso/developer-dashboard/actions/workflows/frontend.yml/badge.svg)](https://github.com/fabiograsso/developer-dashboard/actions/workflows/frontend.yml)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.128.0-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18.2-61DAFB?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind](https://img.shields.io/badge/Tailwind-3.4-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
-[![Tests](https://img.shields.io/badge/tests-passing-success)](https://github.com/yourusername/developer-dashboard/actions)
 
-## 📋 Overview
+## Overview
 
-A modern, full-stack analytics dashboard that visualizes GitHub activity, contribution patterns, and repository statistics. Built with FastAPI and React, it provides developers with actionable insights into their coding habits, most-used languages, and contribution trends over time.
+A modern analytics dashboard that connects to the GitHub API via OAuth and presents developers with interactive visualizations of their activity. Built as a portfolio project demonstrating a production-grade full-stack architecture with async Python, strict TypeScript, and automated CI/CD.
 
-## 🎯 Problem Statement
+### Features
 
-Developers need a comprehensive way to:
-- Visualize their GitHub contributions and activity patterns
-- Track their most-used programming languages
-- Analyze repository performance (stars, forks, activity)
-- Identify their most productive coding times and days
-- Share their developer metrics with potential employers
+- **GitHub OAuth** — secure login, JWT sessions stored in HTTP-only cookies
+- **Contribution Timeline** — daily commit, PR, and issue counts powered by the GitHub Search Commits API
+- **Language Breakdown** — aggregated bytes-of-code across all repositories, displayed as a donut chart
+- **Top Repositories** — ranked by stars with language tags and visibility badges
+- **Activity Heatmap** — day-of-week / hour-of-day matrix showing when you code most
+- **Smart Caching** — PostgreSQL-backed 24-hour cache to minimize GitHub API usage
+- **Dark Mode** — toggle with system-preference detection and localStorage persistence
+- **Responsive Design** — mobile-first layout with Tailwind CSS
 
-GitHub provides raw data, but lacks beautiful, customizable visualization tools that developers can showcase in their portfolios.
-
-## ✨ Solution
-
-An interactive dashboard featuring:
-- **GitHub OAuth Integration**: Secure authentication with GitHub
-- **Contribution Analytics**: Detailed graphs of commits, PRs, and issues over time
-- **Language Breakdown**: Visual representation of programming languages used
-- **Repository Insights**: Top repositories by stars, forks, and recent activity
-- **Activity Heatmap**: Discover your most productive coding times
-- **Responsive Design**: Beautiful UI that works on all devices
-- **Smart Caching**: Fast load times with PostgreSQL-backed data caching
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend
-- **Framework**: FastAPI 0.109.0
-- **Language**: Python 3.11+
-- **Database**: PostgreSQL 15 (data caching)
-- **Authentication**: GitHub OAuth
-- **HTTP Client**: httpx (async GitHub API calls)
-- **Background Tasks**: FastAPI BackgroundTasks
-- **Testing**: pytest with pytest-asyncio
-- **Deployment**: Railway
+
+| Package | Version | Role |
+|---------|---------|------|
+| Python | 3.11+ | Runtime |
+| FastAPI | 0.128.0 | Web framework |
+| Uvicorn | 0.27.0 | ASGI server |
+| SQLAlchemy | 2.0.25 | Async ORM (2.0 `Mapped[]` syntax) |
+| asyncpg | 0.29.0 | PostgreSQL async driver |
+| Pydantic | 2.12.5 | Validation (`ConfigDict`, not `class Config`) |
+| pydantic-settings | 2.1.0 | Environment configuration |
+| Alembic | 1.13.1 | Database migrations |
+| httpx | 0.26.0 | Async HTTP client |
+| python-jose | 3.4.0 | JWT encoding/decoding |
 
 ### Frontend
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS 3.4
-- **Charts**: Recharts
-- **Routing**: React Router v6
-- **State Management**: React Context API + TanStack Query
-- **HTTP Client**: Axios
-- **Deployment**: Vercel
 
-### DevOps
-- **Containerization**: Docker & Docker Compose
-- **CI/CD**: GitHub Actions (separate pipelines for frontend/backend)
-- **Testing**: pytest (backend), Jest + React Testing Library (frontend)
-- **Code Quality**: ESLint, Prettier, Black
+| Package | Version | Role |
+|---------|---------|------|
+| Node.js | 22.x LTS | Runtime |
+| React | 18.2.0 | UI framework |
+| TypeScript | 5.3.3 | Strict mode, no `any` |
+| Vite | 5.0.12 | Build tool |
+| Tailwind CSS | 3.4.1 | Styling (dark mode: `class` strategy) |
+| TanStack Query | 5.17.9 | Server state & caching |
+| React Router | 6.21.3 | Client-side routing |
+| Recharts | 2.10.4 | Charts |
+| Axios | 1.6.5 | HTTP client |
 
-## 🚀 Key Features
+### Infrastructure
 
-### Current (MVP)
-- [x] GitHub OAuth authentication
-- [x] User profile overview (contributions, commits, PRs, issues)
-- [x] Contribution timeline graph (commits over time)
-- [x] Programming languages breakdown (pie chart)
-- [x] Top repositories by stars and forks
-- [x] Repository activity timeline
-- [x] Contribution heatmap (activity by day/hour)
-- [x] Smart data caching (24-hour refresh)
-- [x] Responsive design (mobile, tablet, desktop)
-- [x] Dark mode support
-- [x] Loading states and error handling
+| Component | Port | Notes |
+|-----------|------|-------|
+| PostgreSQL 16 | 5434 (host) / 5432 (container) | Persistent volume |
+| Backend | 8000 | FastAPI + Uvicorn |
+| Frontend | 3000 | Vite dev server |
 
-### Future Enhancements
-- [ ] Compare profiles with other developers
-- [ ] Weekly/monthly activity email reports
-- [ ] Export data to PDF
-- [ ] Integration with GitLab and Bitbucket
-- [ ] Organization analytics
-- [ ] Custom date range selection
-- [ ] Social sharing (Twitter/LinkedIn cards)
+### CI/CD
 
-## 📸 Screenshots
+- **GitHub Actions** — separate workflows for backend (`lint`, `test`, `security`, `docker`) and frontend (`lint`, `typecheck`, `test`, `build`, `audit`)
+- **Backend quality**: Black, isort, Flake8, mypy, pytest + coverage, pip-audit
+- **Frontend quality**: ESLint, TypeScript strict check, Vitest + coverage, npm audit
 
-### Dashboard Overview
-![Dashboard](docs/screenshots/dashboard.png)
+## Project Structure
 
-### Contribution Timeline
-![Contributions](docs/screenshots/contributions.png)
-
-### Language Breakdown
-![Languages](docs/screenshots/languages.png)
-
-### Activity Heatmap
-![Heatmap](docs/screenshots/heatmap.png)
-
-## 📡 API Endpoints
-
-### Authentication
-```
-GET    /api/auth/github/          # Initiate GitHub OAuth flow
-GET    /api/auth/callback/        # OAuth callback handler
-POST   /api/auth/logout/          # Logout user
-```
-
-### User Data
-```
-GET    /api/users/me/             # Get current user profile
-GET    /api/users/me/stats/       # Get user statistics summary
-GET    /api/users/me/refresh/     # Force refresh cached data
-```
-
-### Analytics
-```
-GET    /api/analytics/contributions/     # Contribution timeline data
-GET    /api/analytics/languages/         # Language breakdown
-GET    /api/analytics/repositories/      # Repository statistics
-GET    /api/analytics/heatmap/           # Activity heatmap data
-```
-
-## 💻 Local Development
-
-### Prerequisites
-- Python 3.11+
-- Node.js 18+
-- PostgreSQL 15+
-- Docker (optional)
-- GitHub OAuth App (create at https://github.com/settings/developers)
-
-### GitHub OAuth Setup
-
-1. Go to GitHub Settings → Developer settings → OAuth Apps
-2. Click "New OAuth App"
-3. Fill in:
-   - **Application name**: Developer Dashboard (Local)
-   - **Homepage URL**: http://localhost:5173
-   - **Authorization callback URL**: http://localhost:8000/api/auth/callback
-4. Save the Client ID and Client Secret
-
-### Backend Setup
-```bash
-# Clone repository
-git clone https://github.com/yourusername/developer-dashboard.git
-cd developer-dashboard
-
-# Set up Python virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
-cd backend
-pip install -r requirements.txt
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your GitHub OAuth credentials and database URL
-
-# Run database migrations
-alembic upgrade head
-
-# Run development server
-uvicorn app.main:app --reload --port 8000
-```
-
-Backend will be available at `http://localhost:8000`  
-API docs at `http://localhost:8000/docs`
-
-### Frontend Setup
-```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your backend API URL
-
-# Run development server
-npm run dev
-```
-
-Frontend will be available at `http://localhost:5173`
-
-### Docker Setup (Recommended)
-```bash
-# From project root
-docker-compose up --build
-
-# Run migrations
-docker-compose exec backend alembic upgrade head
-
-# View logs
-docker-compose logs -f
-```
-
-Access:
-- Frontend: http://localhost:5173
-- Backend: http://localhost:8000
-- API Docs: http://localhost:8000/docs
-
-## 🧪 Running Tests
-
-### Backend Tests
-```bash
-cd backend
-pytest --cov=app --cov-report=html
-```
-
-### Frontend Tests
-```bash
-cd frontend
-npm test
-npm run test:coverage
-```
-
-### E2E Tests
-```bash
-npm run test:e2e
-```
-
-## 🔐 Environment Variables
-
-### Backend (.env)
-```bash
-# Application
-APP_NAME=Developer Dashboard
-DEBUG=True
-API_VERSION=v1
-
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/devdash_db
-
-# GitHub OAuth
-GITHUB_CLIENT_ID=your-github-client-id
-GITHUB_CLIENT_SECRET=your-github-client-secret
-GITHUB_REDIRECT_URI=http://localhost:8000/api/auth/callback
-
-# Security
-SECRET_KEY=your-secret-key-here
-JWT_SECRET_KEY=your-jwt-secret
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-
-# CORS
-CORS_ORIGINS=http://localhost:5173,https://developer-dashboard.vercel.app
-
-# Caching
-CACHE_TTL=86400  # 24 hours in seconds
-```
-
-### Frontend (.env)
-```bash
-VITE_API_URL=http://localhost:8000/api
-VITE_GITHUB_CLIENT_ID=your-github-client-id
-```
-
-## 📦 Deployment
-
-### Backend (Railway)
-
-1. **Create Railway project and add PostgreSQL**
-```bash
-   railway init
-   railway add postgresql
-```
-
-2. **Set environment variables** in Railway dashboard
-   - Add all backend environment variables
-   - Update `GITHUB_REDIRECT_URI` to production URL
-   - Update `CORS_ORIGINS` to include production frontend URL
-
-3. **Deploy**
-```bash
-   railway up
-```
-
-### Frontend (Vercel)
-
-1. **Connect repository to Vercel**
-2. **Configure build settings**:
-   - Build Command: `npm run build`
-   - Output Directory: `dist`
-   - Install Command: `npm install`
-3. **Set environment variables**:
-   - `VITE_API_URL`: Your Railway backend URL
-   - `VITE_GITHUB_CLIENT_ID`: Your GitHub OAuth Client ID
-4. Deploy automatically on push to `main`
-
-### Update GitHub OAuth Settings
-
-After deployment, update your GitHub OAuth App:
-- **Homepage URL**: https://developer-dashboard.vercel.app
-- **Authorization callback URL**: https://your-backend.railway.app/api/auth/callback
-
-## 📁 Project Structure
 ```
 developer-dashboard/
-├── backend/                    # FastAPI backend
+├── .github/workflows/
+│   ├── backend.yml            # Backend CI pipeline
+│   ├── frontend.yml           # Frontend CI pipeline
+│   └── pr-checks.yml          # Combined PR validation
+├── backend/
 │   ├── app/
-│   │   ├── main.py            # FastAPI application
-│   │   ├── config.py          # Configuration
-│   │   ├── database.py        # Database connection
-│   │   ├── models/            # SQLAlchemy models
-│   │   │   ├── user.py
-│   │   │   └── cache.py
-│   │   ├── schemas/           # Pydantic schemas
-│   │   │   ├── user.py
-│   │   │   └── analytics.py
-│   │   ├── routers/           # API endpoints
-│   │   │   ├── auth.py
-│   │   │   ├── users.py
-│   │   │   └── analytics.py
-│   │   ├── services/          # Business logic
-│   │   │   ├── github.py      # GitHub API client
-│   │   │   ├── cache.py       # Caching logic
-│   │   │   └── analytics.py   # Analytics processing
-│   │   └── utils/             # Helper functions
+│   │   ├── main.py            # FastAPI app factory, middleware, CORS
+│   │   ├── config.py          # Pydantic Settings (env vars)
+│   │   ├── database.py        # Async SQLAlchemy engine & sessions
+│   │   ├── dependencies.py    # FastAPI DI (get_db, get_current_user)
+│   │   ├── models/
+│   │   │   ├── user.py        # User model (SQLAlchemy 2.0)
+│   │   │   └── cache.py       # CachedData model (JSON column)
+│   │   ├── schemas/
+│   │   │   ├── user.py        # User request/response schemas
+│   │   │   └── analytics.py   # Analytics response schemas
+│   │   ├── routers/
+│   │   │   ├── auth.py        # OAuth login, callback, logout, status
+│   │   │   ├── users.py       # Profile, cache refresh
+│   │   │   └── analytics.py   # Stats, contributions, languages, repos, heatmap
+│   │   └── services/
+│   │       ├── github.py      # GitHub API client (paginated, async)
+│   │       ├── cache.py       # PostgreSQL caching layer
+│   │       ├── analytics.py   # Data aggregation & processing
+│   │       └── security.py    # JWT creation & verification
 │   ├── tests/
+│   │   ├── conftest.py        # Fixtures (in-memory SQLite, mock data)
+│   │   ├── test_auth.py       # 9 tests — OAuth flow, JWT, logout
+│   │   ├── test_analytics.py  # 9 tests — all analytics endpoints
+│   │   ├── test_cache.py      # 6 tests — set/get, expiry, upsert
+│   │   └── test_users.py      # 4 tests — profile, refresh
 │   ├── alembic/               # Database migrations
-│   ├── requirements.txt
-│   └── Dockerfile
-├── frontend/                   # React frontend
+│   ├── requirements.txt       # Production dependencies
+│   ├── requirements-dev.txt   # Dev/test dependencies
+│   ├── Dockerfile
+│   └── pytest.ini
+├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── charts/        # Chart components
-│   │   │   │   ├── ContributionChart.tsx
-│   │   │   │   ├── LanguageChart.tsx
-│   │   │   │   └── HeatmapChart.tsx
-│   │   │   ├── dashboard/     # Dashboard components
-│   │   │   │   ├── StatsCard.tsx
-│   │   │   │   ├── RepoCard.tsx
-│   │   │   │   └── ProfileHeader.tsx
-│   │   │   ├── layout/        # Layout components
-│   │   │   │   ├── Navigation.tsx
-│   │   │   │   └── Footer.tsx
-│   │   │   └── common/        # Reusable components
-│   │   ├── pages/
-│   │   │   ├── LoginPage.tsx
-│   │   │   ├── DashboardPage.tsx
-│   │   │   └── NotFoundPage.tsx
-│   │   ├── services/          # API services
-│   │   │   └── api.ts
-│   │   ├── contexts/          # React contexts
-│   │   │   └── AuthContext.tsx
-│   │   ├── hooks/             # Custom hooks
-│   │   │   └── useAuth.ts
-│   │   ├── types/             # TypeScript types
-│   │   │   └── index.ts
-│   │   ├── utils/             # Utility functions
-│   │   ├── App.tsx
-│   │   └── main.tsx
+│   │   │   ├── common/        # Card, Loader, ErrorMessage, ProtectedRoute
+│   │   │   ├── layout/        # Navigation, DashboardLayout
+│   │   │   ├── dashboard/     # ProfileHeader, StatsCard, RepoCard
+│   │   │   └── charts/        # ContributionChart, LanguageChart, HeatmapChart
+│   │   ├── pages/             # Login, Callback, Dashboard, NotFound
+│   │   ├── services/          # api.ts, authService.ts, analyticsService.ts
+│   │   ├── hooks/             # useAnalytics.ts, useDarkMode.ts
+│   │   ├── contexts/          # AuthContext.tsx
+│   │   ├── types/             # TypeScript interfaces (mirrors backend schemas)
+│   │   ├── App.tsx            # Root component with routing
+│   │   ├── main.tsx           # Entry point
+│   │   └── index.css          # Tailwind directives & global styles
+│   ├── tests/
+│   │   ├── setup.ts           # Vitest setup
+│   │   ├── utils.tsx          # Test render helper (QueryClient + Router)
+│   │   ├── components/        # StatsCard, RepoCard, Loader tests
+│   │   └── hooks/             # useDarkMode tests
 │   ├── package.json
-│   ├── tailwind.config.js
 │   ├── vite.config.ts
+│   ├── vitest.config.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.json
+│   ├── .eslintrc.cjs
 │   └── Dockerfile
-├── docker-compose.yml
+├── docker-compose.yml         # PostgreSQL + backend + frontend
+├── .env.example               # Environment variable template
+├── LICENSE
 └── README.md
 ```
 
-## 🎨 Key Technical Highlights
+## API Endpoints
 
-### GitHub API Integration
-```python
-# backend/app/services/github.py
-class GitHubService:
-    async def get_user_stats(self, access_token: str):
-        """Fetch comprehensive user statistics from GitHub API"""
-        async with httpx.AsyncClient() as client:
-            # User profile
-            profile = await self._get_profile(client, access_token)
-            # Repositories
-            repos = await self._get_repos(client, access_token)
-            # Contributions
-            contributions = await self._get_contributions(client, access_token)
-            
-        return self._aggregate_stats(profile, repos, contributions)
+### Authentication
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/auth/github` | No | Redirect to GitHub OAuth |
+| GET | `/api/auth/callback` | No | Handle OAuth callback, set JWT cookie |
+| POST | `/api/auth/logout` | No | Clear authentication cookie |
+| GET | `/api/auth/status` | Optional | Check if authenticated, return user |
+
+### Users
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/users/me` | Required | Get current user profile |
+| POST | `/api/users/me/refresh` | Required | Clear cache and refresh data |
+
+### Analytics
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/analytics/stats` | Required | Aggregated stats (stars, forks, commits) |
+| GET | `/api/analytics/contributions?days=30` | Required | Daily contribution timeline (1-90 days) |
+| GET | `/api/analytics/languages` | Required | Language breakdown across all repos |
+| GET | `/api/analytics/repositories?limit=10` | Required | Top repositories by stars |
+| GET | `/api/analytics/heatmap` | Required | Activity by day-of-week and hour (168 points) |
+
+Interactive API docs available at `http://localhost:8000/docs` when running locally.
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.11+
+- Node.js 22.x LTS
+- PostgreSQL 16+ (or Docker)
+- A GitHub OAuth App ([create one here](https://github.com/settings/developers))
+  - **Homepage URL**: `http://localhost:3000`
+  - **Callback URL**: `http://localhost:8000/api/auth/callback`
+
+### Option 1: Docker (recommended)
+
+```bash
+# Clone and enter the project
+git clone https://github.com/fabiograsso/developer-dashboard.git
+cd developer-dashboard
+
+# Copy and fill in environment variables
+cp .env.example .env
+# Edit .env with your GitHub OAuth credentials and a JWT secret
+
+# Start all services
+docker-compose up -d --build
+
+# Run database migrations
+docker-compose exec backend alembic upgrade head
 ```
 
-### Smart Caching Strategy
-- Cache GitHub API responses for 24 hours
-- Background task to refresh data automatically
-- Manual refresh option for users
-- Reduces API rate limit usage
+- Frontend: http://localhost:3000
+- Backend: http://localhost:8000
+- API Docs: http://localhost:8000/docs
 
-### Responsive Charts
-```typescript
-// frontend/src/components/charts/ContributionChart.tsx
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+### Option 2: Manual Setup
 
-export function ContributionChart({ data }) {
-  return (
-    <ResponsiveContainer width="100%" height={400}>
-      <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" />
-        <YAxis />
-        <Tooltip />
-        <Line type="monotone" dataKey="commits" stroke="#3b82f6" />
-      </LineChart>
-    </ResponsiveContainer>
-  );
-}
+**Backend:**
+
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your credentials and database URL
+
+# Run migrations and start server
+alembic upgrade head
+uvicorn app.main:app --reload --port 8000
 ```
 
-## 🔒 Security Features
+**Frontend:**
 
-- GitHub OAuth for secure authentication
-- JWT tokens for API authentication
-- HTTP-only cookies for token storage
-- CORS configuration for production
-- Rate limiting on API endpoints
-- SQL injection prevention (SQLAlchemy)
-- XSS protection (React default escaping)
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-## 📊 GitHub API Rate Limits
+## Running Tests
 
-- **Authenticated requests**: 5,000 per hour
-- **Unauthenticated**: 60 per hour
-- Dashboard caches data for 24 hours to minimize API usage
-- Background refresh tasks respect rate limits
+**Backend** (29 tests):
 
-## 🤝 Contributing
+```bash
+cd backend
+pytest -v                                          # Run all tests
+pytest --cov=app --cov-report=html                 # With coverage report
+```
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+**Frontend** (20 tests):
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+```bash
+cd frontend
+npm test                                           # Watch mode
+npm run test:coverage                              # With coverage report
+```
 
-## 📄 License
+**Linting:**
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+```bash
+# Backend
+black --check app tests && isort --check-only app tests && flake8 app tests && mypy app
 
-## 👤 Author
+# Frontend
+npm run lint && npm run typecheck
+```
 
-**Fabio [Your Last Name]**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/yourprofile)
-- Portfolio: [fabio-portfolio.vercel.app](https://fabio-portfolio.vercel.app)
-- Email: your.email@example.com
+## Environment Variables
 
-## 🙏 Acknowledgments
+Copy `.env.example` to `.env` and fill in the values:
 
-- Built with [FastAPI](https://fastapi.tiangolo.com/) and [React](https://react.dev/)
-- Charts powered by [Recharts](https://recharts.org/)
-- Styled with [Tailwind CSS](https://tailwindcss.com/)
-- GitHub data via [GitHub REST API](https://docs.github.com/en/rest)
-- Deployment on [Railway](https://railway.app/) and [Vercel](https://vercel.com/)
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection (must use `+asyncpg`) | `postgresql+asyncpg://user:pass@localhost:5432/devdash` |
+| `GITHUB_CLIENT_ID` | OAuth App client ID | `Iv1.abc123` |
+| `GITHUB_CLIENT_SECRET` | OAuth App client secret | `secret_abc123` |
+| `GITHUB_REDIRECT_URI` | OAuth callback URL | `http://localhost:8000/api/auth/callback` |
+| `GITHUB_SCOPES` | Permissions to request | `read:user user:email repo` |
+| `JWT_SECRET_KEY` | Secret for signing tokens | Generate with `openssl rand -hex 32` |
+| `JWT_ALGORITHM` | JWT algorithm | `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | JWT token lifetime | `30` |
+| `FRONTEND_URL` | Frontend origin for CORS | `http://localhost:3000` |
+| `CACHE_TTL_SECONDS` | Cache lifetime | `86400` (24 hours) |
 
-## 🌟 Show Your Support
+## Security
 
-Give a ⭐️ if this project helped you!
+- JWT tokens stored in **HTTP-only cookies** (not localStorage) to prevent XSS
+- **SameSite=Lax** cookie flag for CSRF protection
+- **Secure** flag enabled in production (HTTPS only)
+- GitHub access tokens are never exposed in API responses
+- All inputs validated with Pydantic v2
+- SQL injection prevented by SQLAlchemy parameterized queries
+- CORS restricted to the configured frontend origin
+- Dependencies audited via pip-audit and npm audit in CI
 
----
+## GitHub API Rate Limits
 
-**Live Demo**: 🚀 https://developer-dashboard.vercel.app  
-**API Documentation**: 📚 https://developer-dashboard-api.railway.app/docs
+- **Authenticated requests**: 5,000/hour
+- **Search API**: 30/minute
+- The 24-hour cache ensures normal dashboard usage stays well under these limits
+- Rate limit headers are monitored on every API response
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
