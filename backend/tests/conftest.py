@@ -10,11 +10,12 @@ Provides fixtures for:
 The authenticated_client fixture creates a client with a valid JWT
 cookie, simulating a logged-in user for endpoint tests.
 """
-import pytest
-import pytest_asyncio
+
 from datetime import datetime
 from typing import AsyncGenerator
 
+import pytest
+import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker

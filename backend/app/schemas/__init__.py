@@ -9,6 +9,7 @@ Schema Organization:
 
 All schemas use the modern ConfigDict pattern (Pydantic v2).
 """
+
 from app.schemas.analytics import (
     ContributionPoint,
     HeatmapPoint,

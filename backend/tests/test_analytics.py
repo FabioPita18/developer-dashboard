@@ -18,17 +18,17 @@ Endpoints tested:
 - GET /api/analytics/repositories: Top repositories
 - GET /api/analytics/heatmap: Activity heatmap
 """
-import pytest
+
 from unittest.mock import patch
+
+import pytest
 
 
 class TestGetStats:
     """Tests for GET /api/analytics/stats endpoint."""
 
     @pytest.mark.asyncio
-    async def test_returns_stats(
-        self, authenticated_client, test_user, mock_repos
-    ):
+    async def test_returns_stats(self, authenticated_client, test_user, mock_repos):
         """Should return aggregated statistics."""
         with patch("app.services.github.get_all_repos") as mock_get_repos:
             with patch("app.services.github.search_user_commits") as mock_search:
@@ -36,9 +36,7 @@ class TestGetStats:
                 # search_user_commits returns (items, total_count, links)
                 mock_search.return_value = ([], 42, {})
 
-                response = await authenticated_client.get(
-                    "/api/analytics/stats"
-                )
+                response = await authenticated_client.get("/api/analytics/stats")
 
                 assert response.status_code == 200
                 data = response.json()
@@ -114,9 +112,7 @@ class TestGetContributions:
         assert response.status_code == 422
 
         # Test too low
-        response = await authenticated_client.get(
-            "/api/analytics/contributions?days=0"
-        )
+        response = await authenticated_client.get("/api/analytics/contributions?days=0")
         assert response.status_code == 422
 
 
@@ -133,9 +129,7 @@ class TestGetLanguages:
                 mock_get_repos.return_value = mock_repos
                 mock_get_langs.return_value = mock_languages
 
-                response = await authenticated_client.get(
-                    "/api/analytics/languages"
-                )
+                response = await authenticated_client.get("/api/analytics/languages")
 
                 assert response.status_code == 200
                 data = response.json()
@@ -157,9 +151,7 @@ class TestGetRepositories:
         with patch("app.services.github.get_all_repos") as mock_get:
             mock_get.return_value = mock_repos
 
-            response = await authenticated_client.get(
-                "/api/analytics/repositories"
-            )
+            response = await authenticated_client.get("/api/analytics/repositories")
 
             assert response.status_code == 200
             data = response.json()
@@ -170,9 +162,7 @@ class TestGetRepositories:
                 assert data[0]["stars"] >= data[1]["stars"]
 
     @pytest.mark.asyncio
-    async def test_limit_parameter(
-        self, authenticated_client, test_user, mock_repos
-    ):
+    async def test_limit_parameter(self, authenticated_client, test_user, mock_repos):
         """Should respect limit parameter."""
         with patch("app.services.github.get_all_repos") as mock_get:
             mock_get.return_value = mock_repos * 5  # 10 repos
@@ -189,9 +179,7 @@ class TestGetHeatmap:
     """Tests for GET /api/analytics/heatmap endpoint."""
 
     @pytest.mark.asyncio
-    async def test_returns_heatmap(
-        self, authenticated_client, test_user, mock_events
-    ):
+    async def test_returns_heatmap(self, authenticated_client, test_user, mock_events):
         """Should return activity heatmap data."""
         with patch("app.services.github.get_all_events") as mock_get:
             mock_get.return_value = mock_events

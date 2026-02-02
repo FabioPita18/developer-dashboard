@@ -11,6 +11,7 @@ Endpoints:
 - GET /repositories: Top repositories
 - GET /heatmap: Activity heatmap
 """
+
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query

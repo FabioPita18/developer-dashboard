@@ -20,6 +20,7 @@ Rate Limiting:
     - 60 requests/hour for unauthenticated
     We cache responses to stay well under the limit.
 """
+
 import re
 from typing import Any
 from urllib.parse import urlencode
@@ -42,6 +43,7 @@ DEFAULT_TIMEOUT = 30.0
 # =============================================================================
 # Internal Helpers
 # =============================================================================
+
 
 def _get_auth_headers(access_token: str) -> dict[str, str]:
     """
@@ -91,6 +93,7 @@ def _parse_link_header(link_header: str | None) -> dict[str, str]:
 # =============================================================================
 # OAuth Methods
 # =============================================================================
+
 
 def get_authorization_url() -> str:
     """
@@ -146,6 +149,7 @@ async def exchange_code_for_token(code: str) -> dict[str, Any]:
 # User Methods
 # =============================================================================
 
+
 async def get_user_profile(access_token: str) -> dict[str, Any]:
     """
     Fetch authenticated user's GitHub profile.
@@ -196,6 +200,7 @@ async def get_user_emails(access_token: str) -> list[dict[str, Any]]:
 # =============================================================================
 # Repository Methods
 # =============================================================================
+
 
 async def get_user_repos(
     access_token: str,
@@ -304,6 +309,7 @@ async def get_repo_languages(
 # =============================================================================
 # Event Methods (Activity Feed)
 # =============================================================================
+
 
 async def get_user_events(
     access_token: str,
@@ -473,7 +479,10 @@ async def get_all_user_commits(
 
     while page <= max_pages:
         commits, total_count, links = await search_user_commits(
-            access_token, username, since, until,
+            access_token,
+            username,
+            since,
+            until,
             page=page,
         )
         all_commits.extend(commits)
@@ -489,6 +498,7 @@ async def get_all_user_commits(
 # =============================================================================
 # Rate Limit Utilities
 # =============================================================================
+
 
 def check_rate_limit_headers(headers: dict) -> dict[str, int]:
     """

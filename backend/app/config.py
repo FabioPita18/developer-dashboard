@@ -20,6 +20,7 @@ Why @lru_cache?
     Settings are loaded once and cached. This prevents
     re-reading environment variables on every request.
 """
+
 from functools import lru_cache
 from typing import Literal
 
@@ -48,7 +49,9 @@ class Settings(BaseSettings):
 
     # Full database URL including the asyncpg driver
     # Format: postgresql+asyncpg://user:password@host:port/database
-    database_url: str = "postgresql+asyncpg://devdash_user:devdash_password@localhost:5434/devdash_db"
+    database_url: str = (
+        "postgresql+asyncpg://devdash_user:devdash_password@localhost:5434/devdash_db"
+    )
 
     # =========================================================================
     # GitHub OAuth Settings

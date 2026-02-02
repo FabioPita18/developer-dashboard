@@ -7,6 +7,7 @@ Provides:
 
 These endpoints require authentication (JWT in HTTP-only cookie).
 """
+
 from typing import Annotated
 
 from fastapi import APIRouter, Depends

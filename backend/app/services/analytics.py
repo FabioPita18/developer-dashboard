@@ -16,10 +16,9 @@ Data Flow:
 
 All methods use caching to minimize API calls.
 """
+
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-from typing import Any
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
@@ -104,8 +103,10 @@ async def get_user_stats(
     today = now.strftime("%Y-%m-%d")
 
     _, total_commits, _ = await github.search_user_commits(
-        user.access_token, user.username,
-        since=one_year_ago, until=today,
+        user.access_token,
+        user.username,
+        since=one_year_ago,
+        until=today,
         per_page=1,  # We only need the total_count, not the items
     )
 
@@ -171,8 +172,10 @@ async def get_contribution_timeline(
 
     # --- Fetch commits via Search API (accurate commit counts) ---
     commits = await github.get_all_user_commits(
-        user.access_token, user.username,
-        since=since_date, until=until_date,
+        user.access_token,
+        user.username,
+        since=since_date,
+        until=until_date,
     )
 
     for commit in commits:
@@ -226,21 +229,20 @@ async def get_contribution_timeline(
         date_key = date.strftime("%Y-%m-%d")
         data = daily_data.get(date_key, {"commits": 0, "pull_requests": 0, "issues": 0})
 
-        result.append(ContributionPoint(
-            date=date_key,
-            commits=data["commits"],
-            pull_requests=data["pull_requests"],
-            issues=data["issues"],
-        ))
+        result.append(
+            ContributionPoint(
+                date=date_key,
+                commits=data["commits"],
+                pull_requests=data["pull_requests"],
+                issues=data["issues"],
+            )
+        )
 
     # Sort by date ascending
     result.sort(key=lambda x: x.date)
 
     # Cache
-    await cache.set_cached(
-        db, user.id, cache_key,
-        [p.model_dump() for p in result]
-    )
+    await cache.set_cached(db, user.id, cache_key, [p.model_dump() for p in result])
 
     return result
 
@@ -308,12 +310,14 @@ async def get_language_breakdown(
         percentage = (bytes_count / total_bytes) * 100
         color = LANGUAGE_COLORS.get(lang, DEFAULT_LANGUAGE_COLOR)
 
-        result.append(LanguageBreakdown(
-            language=lang,
-            bytes=bytes_count,
-            percentage=round(percentage, 2),
-            color=color,
-        ))
+        result.append(
+            LanguageBreakdown(
+                language=lang,
+                bytes=bytes_count,
+                percentage=round(percentage, 2),
+                color=color,
+            )
+        )
 
     # Sort by percentage descending, take top 10
     result.sort(key=lambda x: x.percentage, reverse=True)
@@ -321,8 +325,7 @@ async def get_language_breakdown(
 
     # Cache
     await cache.set_cached(
-        db, user.id, cache_key,
-        [lang.model_dump() for lang in result]
+        db, user.id, cache_key, [lang.model_dump() for lang in result]
     )
 
     return result
@@ -361,23 +364,22 @@ async def get_top_repositories(
     # Note: Repository schema uses 'stars', 'forks', 'is_private' field names
     result = []
     for repo in repos[:limit]:
-        result.append(Repository(
-            name=repo.get("name", ""),
-            full_name=repo.get("full_name", ""),
-            description=repo.get("description"),
-            html_url=repo.get("html_url", ""),
-            language=repo.get("language"),
-            stars=repo.get("stargazers_count", 0),
-            forks=repo.get("forks_count", 0),
-            is_private=repo.get("private", False),
-            updated_at=repo.get("updated_at", ""),
-        ))
+        result.append(
+            Repository(
+                name=repo.get("name", ""),
+                full_name=repo.get("full_name", ""),
+                description=repo.get("description"),
+                html_url=repo.get("html_url", ""),
+                language=repo.get("language"),
+                stars=repo.get("stargazers_count", 0),
+                forks=repo.get("forks_count", 0),
+                is_private=repo.get("private", False),
+                updated_at=repo.get("updated_at", ""),
+            )
+        )
 
     # Cache
-    await cache.set_cached(
-        db, user.id, cache_key,
-        [r.model_dump() for r in result]
-    )
+    await cache.set_cached(db, user.id, cache_key, [r.model_dump() for r in result])
 
     return result
 
@@ -433,16 +435,15 @@ async def get_activity_heatmap(
     for day in range(7):
         for hour in range(24):
             count = counts.get((day, hour), 0)
-            result.append(HeatmapPoint(
-                day=day,
-                hour=hour,
-                count=count,
-            ))
+            result.append(
+                HeatmapPoint(
+                    day=day,
+                    hour=hour,
+                    count=count,
+                )
+            )
 
     # Cache
-    await cache.set_cached(
-        db, user.id, cache_key,
-        [p.model_dump() for p in result]
-    )
+    await cache.set_cached(db, user.id, cache_key, [p.model_dump() for p in result])
 
     return result

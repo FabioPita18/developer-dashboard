@@ -11,6 +11,7 @@ Models:
 Import all models here to ensure they're registered with SQLAlchemy
 before creating tables or running migrations.
 """
+
 from app.models.cache import CachedData
 from app.models.user import User
 

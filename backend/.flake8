@@ -1,0 +1,10 @@
+[flake8]
+# Match Black's default line length
+max-line-length = 88
+# Ignore E203 (whitespace before ':') which conflicts with Black
+extend-ignore = E203
+# Exclude generated files
+exclude =
+    alembic/versions,
+    __pycache__,
+    .git

@@ -24,6 +24,7 @@ Usage:
         # user and db are automatically injected
         pass
 """
+
 from typing import Annotated, AsyncGenerator
 
 from fastapi import Depends, HTTPException, Request, status

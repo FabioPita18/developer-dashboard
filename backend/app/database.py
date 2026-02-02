@@ -19,11 +19,8 @@ Connection Pooling:
     - max_overflow: Additional connections under load
     - pool_pre_ping: Check if connection is alive before use
 """
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
 from app.config import get_settings
@@ -36,9 +33,9 @@ settings = get_settings()
 engine = create_async_engine(
     settings.database_url,
     echo=settings.debug,  # Log SQL in debug mode
-    pool_pre_ping=True,   # Verify connections are alive
-    pool_size=5,          # Base number of connections
-    max_overflow=10,      # Extra connections under load
+    pool_pre_ping=True,  # Verify connections are alive
+    pool_size=5,  # Base number of connections
+    max_overflow=10,  # Extra connections under load
 )
 
 # Session factory
@@ -65,6 +62,7 @@ class Base(DeclarativeBase):
             __tablename__ = "users"
             id: Mapped[int] = mapped_column(primary_key=True)
     """
+
     pass
 
 

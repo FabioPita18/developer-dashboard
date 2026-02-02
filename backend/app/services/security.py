@@ -22,6 +22,7 @@ Security Considerations:
     - Secure flag ensures HTTPS-only in production
     - SameSite flag provides CSRF protection
 """
+
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -74,9 +75,9 @@ def create_access_token(
     # Build the token payload
     payload = {
         "sub": str(user_id),  # Subject (who the token is about)
-        "exp": expire,        # Expiration time
+        "exp": expire,  # Expiration time
         "iat": datetime.utcnow(),  # Issued at
-        "type": "access",     # Token type
+        "type": "access",  # Token type
     }
 
     # Encode and return the JWT

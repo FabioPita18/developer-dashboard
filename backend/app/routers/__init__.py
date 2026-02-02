@@ -8,6 +8,7 @@ Routers:
 - users_router: User profile endpoints (/api/users)
 - analytics_router: Analytics endpoints (/api/analytics)
 """
+
 from app.routers.analytics import router as analytics_router
 from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router

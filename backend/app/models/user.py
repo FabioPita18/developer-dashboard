@@ -14,6 +14,7 @@ Security Note:
     This token allows making API calls on the user's behalf.
     NEVER expose this field in API responses!
 """
+
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 

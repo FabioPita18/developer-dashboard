@@ -10,6 +10,7 @@ Functions tested:
 - delete_cached: Delete specific cache entry
 - delete_all_user_cache: Delete all cache for a user
 """
+
 import pytest
 
 from app.services import cache
@@ -21,9 +22,7 @@ class TestCacheService:
     @pytest.mark.asyncio
     async def test_set_and_get(self, test_db):
         """Should store and retrieve cached data."""
-        await cache.set_cached(
-            test_db, 1, "test_key", {"value": "test_data"}
-        )
+        await cache.set_cached(test_db, 1, "test_key", {"value": "test_data"})
 
         result = await cache.get_cached(test_db, 1, "test_key")
 
@@ -40,9 +39,7 @@ class TestCacheService:
     @pytest.mark.asyncio
     async def test_expired_cache(self, test_db):
         """Should return None for expired cache."""
-        await cache.set_cached(
-            test_db, 1, "expiring", {"data": "test"}, ttl_seconds=0
-        )
+        await cache.set_cached(test_db, 1, "expiring", {"data": "test"}, ttl_seconds=0)
 
         # Should be expired immediately
         result = await cache.get_cached(test_db, 1, "expiring")

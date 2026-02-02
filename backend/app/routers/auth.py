@@ -18,6 +18,7 @@ OAuth Flow:
     8. Create JWT and set as HTTP-only cookie
     9. Redirect to frontend dashboard
 """
+
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
@@ -43,7 +44,7 @@ router = APIRouter(
     "/github",
     summary="Initiate GitHub OAuth login",
     description="Redirects user to GitHub for authentication. "
-                "After authorization, GitHub redirects back to /callback.",
+    "After authorization, GitHub redirects back to /callback.",
     response_class=RedirectResponse,
 )
 async def github_login() -> RedirectResponse:
@@ -64,7 +65,7 @@ async def github_login() -> RedirectResponse:
     "/callback",
     summary="GitHub OAuth callback",
     description="Handles the OAuth callback from GitHub. "
-                "Exchanges code for token, creates user, sets cookie.",
+    "Exchanges code for token, creates user, sets cookie.",
     response_class=RedirectResponse,
 )
 async def github_callback(
@@ -100,10 +101,7 @@ async def github_callback(
 
     # Check for OAuth errors
     if "error" in token_data:
-        error_description = token_data.get(
-            "error_description",
-            "Unknown OAuth error"
-        )
+        error_description = token_data.get("error_description", "Unknown OAuth error")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"GitHub OAuth error: {error_description}",

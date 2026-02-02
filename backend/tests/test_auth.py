@@ -11,8 +11,10 @@ Endpoints tested:
 - GET /api/auth/callback: OAuth callback handler
 - POST /api/auth/logout: Logout
 """
-import pytest
+
 from unittest.mock import patch
+
+import pytest
 
 
 class TestHealthCheck:

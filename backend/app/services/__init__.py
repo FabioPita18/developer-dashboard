@@ -14,6 +14,7 @@ Design Pattern:
 Services are stateless functions that receive dependencies (like db sessions)
 as parameters. This makes them easy to test and reuse.
 """
+
 from app.services import analytics, cache, github, security
 
 __all__ = ["analytics", "cache", "github", "security"]

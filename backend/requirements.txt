@@ -5,7 +5,7 @@
 # Web Framework
 # FastAPI is a modern, fast (high-performance) web framework for building APIs
 # with Python 3.7+ based on standard Python type hints.
-fastapi==0.109.0
+fastapi==0.115.6
 
 # ASGI Server
 # Uvicorn is a lightning-fast ASGI server implementation, using uvloop and httptools.
@@ -50,7 +50,7 @@ httpx==0.26.0
 # JWT Authentication
 # python-jose provides JSON Web Token encoding and decoding.
 # The [cryptography] extra provides better performance and security.
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.4.0
 
 # Environment Variables
 # python-dotenv loads environment variables from .env files.

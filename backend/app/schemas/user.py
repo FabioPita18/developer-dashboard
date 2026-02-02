@@ -14,6 +14,7 @@ Security Note:
     UserResponse NEVER includes access_token!
     Create separate schemas for internal vs. API use.
 """
+
 from datetime import datetime
 from typing import Optional
 

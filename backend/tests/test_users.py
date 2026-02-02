@@ -7,6 +7,7 @@ Endpoints tested:
 - GET /api/users/me: Current user profile
 - POST /api/users/me/refresh: Clear cache and refresh data
 """
+
 import pytest
 
 
@@ -41,9 +42,7 @@ class TestRefreshUserData:
         from app.services import cache
 
         # Add some cached data
-        await cache.set_cached(
-            test_db, test_user.id, "test_key", {"data": "test"}
-        )
+        await cache.set_cached(test_db, test_user.id, "test_key", {"data": "test"})
 
         # Verify cache exists
         cached = await cache.get_cached(test_db, test_user.id, "test_key")

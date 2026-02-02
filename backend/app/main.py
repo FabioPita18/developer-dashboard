@@ -10,6 +10,7 @@ Application setup includes:
 - Health check endpoint
 - OpenAPI documentation configuration
 """
+
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -53,7 +54,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(
     title=settings.app_name,
     description="Backend API for Developer Dashboard - "
-                "GitHub analytics and visualization.",
+    "GitHub analytics and visualization.",
     version="0.1.0",
     docs_url="/docs",  # Swagger UI
     redoc_url="/redoc",  # ReDoc
@@ -98,6 +99,7 @@ app.include_router(analytics_router)
 # =============================================================================
 # Root Endpoints
 # =============================================================================
+
 
 @app.get(
     "/",

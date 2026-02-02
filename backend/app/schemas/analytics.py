@@ -11,6 +11,7 @@ Each schema represents a specific type of analytics data:
 - Repository: Repository information
 - HeatmapPoint: Activity heatmap data
 """
+
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field

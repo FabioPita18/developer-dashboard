@@ -23,6 +23,7 @@ Cache Strategy:
     - TTL (Time-To-Live) determines freshness
     - Expired entries are cleaned up periodically
 """
+
 from datetime import datetime, timedelta
 from typing import Any, Callable, TypeVar
 
@@ -195,9 +196,7 @@ async def delete_expired_cache(db: AsyncSession) -> int:
     Returns:
         Number of entries deleted
     """
-    stmt = delete(CachedData).where(
-        CachedData.expires_at < datetime.utcnow()
-    )
+    stmt = delete(CachedData).where(CachedData.expires_at < datetime.utcnow())
     result = await db.execute(stmt)
     await db.commit()
 

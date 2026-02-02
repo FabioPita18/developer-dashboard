@@ -17,10 +17,11 @@ Trade-offs:
 - Uses database connections
 - For our use case, these trade-offs are acceptable
 """
+
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import ForeignKey, Index, JSON, String, UniqueConstraint
+from sqlalchemy import JSON, ForeignKey, Index, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
