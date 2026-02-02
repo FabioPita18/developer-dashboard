@@ -43,7 +43,7 @@ async def get_cached(
     db: AsyncSession,
     user_id: int,
     cache_key: str,
-) -> dict[str, Any] | None:
+) -> dict[str, Any] | list[Any] | None:
     """
     Get cached data if it exists and is not expired.
 
@@ -78,7 +78,7 @@ async def set_cached(
     db: AsyncSession,
     user_id: int,
     cache_key: str,
-    data: dict[str, Any],
+    data: dict[str, Any] | list[Any],
     ttl_seconds: int | None = None,
 ) -> CachedData:
     """
@@ -209,7 +209,7 @@ async def get_or_fetch(
     cache_key: str,
     fetch_func: Callable[[], Any],
     ttl_seconds: int | None = None,
-) -> dict[str, Any]:
+) -> dict[str, Any] | list[Any]:
     """
     Get from cache or fetch and cache.
 
@@ -244,15 +244,17 @@ async def get_or_fetch(
         return cached
 
     # Fetch fresh data
-    data = await fetch_func()
+    raw_data = await fetch_func()
 
     # Convert to dict if necessary
-    if hasattr(data, "model_dump"):
+    if hasattr(raw_data, "model_dump"):
         # Pydantic model
-        data = data.model_dump()
-    elif hasattr(data, "__dict__"):
+        data: dict[str, Any] | list[Any] = raw_data.model_dump()
+    elif hasattr(raw_data, "__dict__"):
         # Regular object
-        data = dict(data.__dict__)
+        data = dict(raw_data.__dict__)
+    else:
+        data = raw_data
 
     # Cache it
     await set_cached(db, user_id, cache_key, data, ttl_seconds)

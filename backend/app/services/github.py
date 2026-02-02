@@ -142,7 +142,8 @@ async def exchange_code_for_token(code: str) -> dict[str, Any]:
             },
             headers={"Accept": "application/json"},
         )
-        return response.json()
+        result: dict[str, Any] = response.json()
+        return result
 
 
 # =============================================================================
@@ -172,7 +173,8 @@ async def get_user_profile(access_token: str) -> dict[str, Any]:
             headers=_get_auth_headers(access_token),
         )
         response.raise_for_status()
-        return response.json()
+        profile: dict[str, Any] = response.json()
+        return profile
 
 
 async def get_user_emails(access_token: str) -> list[dict[str, Any]]:
@@ -194,7 +196,8 @@ async def get_user_emails(access_token: str) -> list[dict[str, Any]]:
             headers=_get_auth_headers(access_token),
         )
         response.raise_for_status()
-        return response.json()
+        emails: list[dict[str, Any]] = response.json()
+        return emails
 
 
 # =============================================================================
@@ -303,7 +306,8 @@ async def get_repo_languages(
             headers=_get_auth_headers(access_token),
         )
         response.raise_for_status()
-        return response.json()
+        languages: dict[str, int] = response.json()
+        return languages
 
 
 # =============================================================================
@@ -533,4 +537,5 @@ async def get_rate_limit(access_token: str) -> dict[str, Any]:
             headers=_get_auth_headers(access_token),
         )
         response.raise_for_status()
-        return response.json()
+        rate_limit: dict[str, Any] = response.json()
+        return rate_limit

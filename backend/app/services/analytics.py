@@ -85,7 +85,7 @@ async def get_user_stats(
 
     # Try cache first
     cached = await cache.get_cached(db, user.id, cache_key)
-    if cached:
+    if isinstance(cached, dict):
         return UserStats(**cached)
 
     # Fetch fresh data
@@ -158,7 +158,7 @@ async def get_contribution_timeline(
 
     # Try cache
     cached = await cache.get_cached(db, user.id, cache_key)
-    if cached:
+    if isinstance(cached, list):
         return [ContributionPoint(**p) for p in cached]
 
     # Calculate date range
@@ -269,7 +269,7 @@ async def get_language_breakdown(
 
     # Try cache
     cached = await cache.get_cached(db, user.id, cache_key)
-    if cached:
+    if isinstance(cached, list):
         return [LanguageBreakdown(**lang) for lang in cached]
 
     # Fetch all repos
@@ -352,7 +352,7 @@ async def get_top_repositories(
 
     # Try cache
     cached = await cache.get_cached(db, user.id, cache_key)
-    if cached:
+    if isinstance(cached, list):
         return [Repository(**r) for r in cached]
 
     # Fetch repos
@@ -406,7 +406,7 @@ async def get_activity_heatmap(
 
     # Try cache
     cached = await cache.get_cached(db, user.id, cache_key)
-    if cached:
+    if isinstance(cached, list):
         return [HeatmapPoint(**p) for p in cached]
 
     # Fetch events

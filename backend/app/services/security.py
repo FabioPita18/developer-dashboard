@@ -81,11 +81,12 @@ def create_access_token(
     }
 
     # Encode and return the JWT
-    return jwt.encode(
+    encoded: str = jwt.encode(
         payload,
         settings.jwt_secret_key,
         algorithm=settings.jwt_algorithm,
     )
+    return encoded
 
 
 def verify_token(token: str) -> dict[str, Any] | None:
@@ -105,7 +106,7 @@ def verify_token(token: str) -> dict[str, Any] | None:
     """
     try:
         # Decode and verify the token
-        payload = jwt.decode(
+        payload: dict[str, Any] = jwt.decode(
             token,
             settings.jwt_secret_key,
             algorithms=[settings.jwt_algorithm],

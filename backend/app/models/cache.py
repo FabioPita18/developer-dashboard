@@ -84,7 +84,7 @@ class CachedData(Base):
 
     # The actual cached data stored as JSON
     # PostgreSQL has native JSON support with indexing capabilities
-    data: Mapped[dict[str, Any]] = mapped_column(
+    data: Mapped[dict[str, Any] | list[Any]] = mapped_column(
         JSON,
         comment="Cached JSON data",
     )
