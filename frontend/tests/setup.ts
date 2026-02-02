@@ -4,21 +4,24 @@
  * This file runs before each test file.
  * It sets up:
  * - Jest DOM matchers (toBeInTheDocument, etc.)
- * - Browser API mocks (localStorage, matchMedia)
+ * - Browser API mocks (localStorage, matchMedia, location)
+ *
+ * Mocking these browser APIs is required because jsdom
+ * doesn't implement them natively.
  */
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
 // Mock window.matchMedia for dark mode tests
-// This is required because jsdom doesn't implement matchMedia
+// jsdom doesn't implement matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: vi.fn(), // Deprecated but still used
-    removeListener: vi.fn(), // Deprecated but still used
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
@@ -36,9 +39,26 @@ const localStorageMock = {
 };
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
+// Mock window.location
+const locationMock = {
+  href: '',
+  pathname: '/',
+  assign: vi.fn(),
+  replace: vi.fn(),
+  reload: vi.fn(),
+};
+Object.defineProperty(window, 'location', {
+  value: locationMock,
+  writable: true,
+});
+
 // Mock scrollTo
 window.scrollTo = vi.fn();
 
-// Silence console errors in tests (optional)
-// Uncomment if you want cleaner test output
-// vi.spyOn(console, 'error').mockImplementation(() => {});
+// Reset all mocks before each test
+beforeEach(() => {
+  vi.clearAllMocks();
+  localStorageMock.getItem.mockReturnValue(null);
+  locationMock.href = '';
+  locationMock.pathname = '/';
+});
