@@ -19,6 +19,7 @@ All methods use caching to minimize API calls.
 
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
