@@ -2,8 +2,8 @@
 
 > Full-stack GitHub analytics dashboard — visualize contributions, languages, and coding patterns.
 
-[![Backend CI](https://github.com/fabiograsso/developer-dashboard/actions/workflows/backend.yml/badge.svg)](https://github.com/fabiograsso/developer-dashboard/actions/workflows/backend.yml)
-[![Frontend CI](https://github.com/fabiograsso/developer-dashboard/actions/workflows/frontend.yml/badge.svg)](https://github.com/fabiograsso/developer-dashboard/actions/workflows/frontend.yml)
+[![Backend CI](https://github.com/FabioPita18/developer-dashboard/actions/workflows/backend.yml/badge.svg)](https://github.com/FabioPita18/developer-dashboard/actions/workflows/backend.yml)
+[![Frontend CI](https://github.com/FabioPita18/developer-dashboard/actions/workflows/frontend.yml/badge.svg)](https://github.com/FabioPita18/developer-dashboard/actions/workflows/frontend.yml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128.0-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18.2-61DAFB?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?logo=typescript)](https://www.typescriptlang.org/)
@@ -187,7 +187,7 @@ Interactive API docs available at `http://localhost:8000/docs` when running loca
 
 ```bash
 # Clone and enter the project
-git clone https://github.com/fabiograsso/developer-dashboard.git
+git clone https://github.com/FabioPita18/developer-dashboard.git
 cd developer-dashboard
 
 # Copy and fill in environment variables
