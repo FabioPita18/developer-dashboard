@@ -1,74 +1,129 @@
 /**
  * TypeScript Type Definitions
  *
- * These types mirror the backend Pydantic schemas.
- * We'll expand these in Phase 4.
+ * These types MUST match the backend Pydantic schemas exactly.
+ * When the backend changes, update these immediately.
  *
- * Learning Notes:
- * - Interfaces define the shape of objects
- * - These types should match the backend API response formats
- * - Using strict TypeScript (no `any`) ensures type safety
- * - Types are defined separately from runtime code
+ * Convention: Frontend uses camelCase, backend uses snake_case.
+ * The API service layer handles conversion automatically.
  */
 
+// =============================================================================
+// User Types
+// =============================================================================
+
 /**
- * User model - represents a GitHub user in the system.
- * This is a placeholder that will be expanded in Phase 4.
+ * User profile data from API.
+ * Matches backend UserResponse schema (after camelCase conversion).
  */
 export interface User {
-  /** Unique database ID */
   id: number;
-  /** GitHub username */
+  githubId: number;
   username: string;
-  /** User's email (may be null if private) */
   email: string | null;
-  /** GitHub avatar URL */
+  name: string | null;
   avatarUrl: string | null;
-  /** Number of followers */
+  bio: string | null;
+  company: string | null;
+  location: string | null;
+  blog: string | null;
+  publicRepos: number;
   followers: number;
-  /** Number of users following */
   following: number;
-  /** Account creation timestamp (ISO string) */
   createdAt: string;
+  lastLoginAt: string;
 }
 
 /**
- * Authentication status response from the API.
+ * Authentication status from /api/auth/status.
+ * Backend returns { authenticated: bool, user: User | null }.
  */
 export interface AuthStatus {
-  /** Whether the user is currently authenticated */
-  isAuthenticated: boolean;
-  /** The authenticated user, if any */
+  authenticated: boolean;
   user: User | null;
 }
 
+// =============================================================================
+// Analytics Types
+// =============================================================================
+
 /**
- * Generic API response wrapper.
- * Used for consistent API response format.
+ * Aggregated user statistics.
+ * Matches backend UserStats schema.
  */
-export interface ApiResponse<T> {
-  /** The response data */
-  data: T;
-  /** Optional message */
-  message?: string;
+export interface UserStats {
+  totalStars: number;
+  totalForks: number;
+  publicRepos: number;
+  privateRepos: number;
+  totalCommits: number;
 }
 
 /**
- * API error response format.
+ * Single point on contribution timeline.
+ * Matches backend ContributionPoint schema.
+ */
+export interface ContributionPoint {
+  date: string;
+  commits: number;
+  pullRequests: number;
+  issues: number;
+}
+
+/**
+ * Language breakdown for pie chart.
+ * Matches backend LanguageBreakdown schema.
+ */
+export interface LanguageBreakdown {
+  language: string;
+  bytes: number;
+  percentage: number;
+  color: string;
+}
+
+/**
+ * Repository data for display.
+ * Matches backend Repository schema.
+ *
+ * Note: Backend field 'is_private' becomes 'isPrivate' after
+ * snake_case to camelCase conversion in the API layer.
+ */
+export interface Repository {
+  name: string;
+  fullName: string;
+  description: string | null;
+  htmlUrl: string;
+  language: string | null;
+  stars: number;
+  forks: number;
+  isPrivate: boolean;
+  updatedAt: string;
+}
+
+/**
+ * Activity heatmap data point.
+ * Matches backend HeatmapPoint schema.
+ */
+export interface HeatmapPoint {
+  day: number;
+  hour: number;
+  count: number;
+}
+
+// =============================================================================
+// API Types
+// =============================================================================
+
+/**
+ * API error response format (from FastAPI HTTPException).
  */
 export interface ApiError {
-  /** Error description */
   detail: string;
-  /** HTTP status code */
-  status: number;
 }
 
 /**
- * Type guard to check if an error is an API error.
- * Type guards help TypeScript narrow types at runtime.
- *
- * @param error - The error to check
- * @returns True if the error matches ApiError shape
+ * Type guard for API errors.
+ * Use this when catching errors from API calls.
  */
 export function isApiError(error: unknown): error is ApiError {
   return (
@@ -77,4 +132,22 @@ export function isApiError(error: unknown): error is ApiError {
     'detail' in error &&
     typeof (error as ApiError).detail === 'string'
   );
+}
+
+// =============================================================================
+// Component Types
+// =============================================================================
+
+/**
+ * Common props for components that accept className.
+ */
+export interface WithClassName {
+  className?: string;
+}
+
+/**
+ * Common props for components with children.
+ */
+export interface WithChildren {
+  children: React.ReactNode;
 }

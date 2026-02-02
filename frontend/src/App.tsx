@@ -1,70 +1,76 @@
 /**
  * Root Application Component
  *
- * This is the entry point for the React application.
- * We'll add routing and providers in Phase 4.
+ * Sets up the core application infrastructure:
+ * - QueryClientProvider: TanStack Query for server state management
+ * - BrowserRouter: Client-side routing
+ * - AuthProvider: Authentication context for the app
+ * - Routes: Page routing with protected routes
  *
- * Learning Notes:
- * - React components are functions that return JSX
- * - JSX is a syntax extension that looks like HTML but compiles to JavaScript
- * - Tailwind classes are applied directly to elements
- * - dark: prefix applies styles when dark mode is active
+ * Component hierarchy:
+ *   QueryClientProvider > BrowserRouter > AuthProvider > Routes
+ *
+ * Why this order?
+ * - QueryClient must wrap everything that uses queries
+ * - BrowserRouter must wrap anything using useNavigate/useLocation
+ * - AuthProvider needs both Query and Router (for redirects)
  */
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ProtectedRoute } from '@/components/common';
+import {
+  LoginPage,
+  CallbackPage,
+  DashboardPage,
+  NotFoundPage,
+} from '@/pages';
 
 /**
- * Main App component that renders the application root.
+ * Query Client with sensible defaults.
  *
- * @returns {JSX.Element} The rendered application
+ * - retry: 1 - retry failed requests once
+ * - refetchOnWindowFocus: false - don't refetch when tab becomes active
+ * - staleTime: 5 minutes - data is considered fresh for 5 minutes
  */
-function App(): JSX.Element {
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+});
+
+export default function App(): JSX.Element {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Container centers content and adds horizontal padding */}
-      <div className="container mx-auto px-4 py-8">
-        {/* Page header */}
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          Developer Dashboard
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
-          GitHub analytics and visualization dashboard.
-        </p>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/callback" element={<CallbackPage />} />
 
-        {/* Status card */}
-        <div className="card">
-          <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
-            Phase 1 Complete!
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            The development environment is set up and ready.
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500">
-            Next: Phase 2 - Backend Core (Database & OAuth)
-          </p>
-        </div>
+            {/* Protected routes - require authentication */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
 
-        {/* Environment info card */}
-        <div className="card mt-6">
-          <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">
-            Tech Stack
-          </h3>
-          <ul className="space-y-2 text-gray-600 dark:text-gray-400">
-            <li className="flex items-center">
-              <span className="w-24 font-medium">Frontend:</span>
-              <span>React + TypeScript + Tailwind CSS</span>
-            </li>
-            <li className="flex items-center">
-              <span className="w-24 font-medium">Backend:</span>
-              <span>FastAPI + SQLAlchemy 2.0 + PostgreSQL</span>
-            </li>
-            <li className="flex items-center">
-              <span className="w-24 font-medium">Build:</span>
-              <span>Vite + Docker Compose</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
+            {/* Redirect root to dashboard */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+            {/* 404 catch-all */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
-
-export default App;
