@@ -2,70 +2,140 @@
 FastAPI Application Factory.
 
 This module creates and configures the FastAPI application.
-We'll expand this in Phase 2 with full configuration.
 
-Learning Notes:
-- FastAPI is a modern Python web framework based on Starlette
-- It uses Python type hints for automatic validation and documentation
-- CORS middleware is needed for cross-origin requests from the frontend
-- The app object is the main entry point for the ASGI server (Uvicorn)
+Application setup includes:
+- CORS middleware for frontend access
+- Router registration
+- Lifespan events (startup/shutdown)
+- Health check endpoint
+- OpenAPI documentation configuration
 """
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Application metadata
-# These values appear in the auto-generated API documentation
+from app.config import get_settings
+from app.routers.auth import router as auth_router
+
+settings = get_settings()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """
+    Application lifespan manager.
+
+    Code before 'yield' runs on startup.
+    Code after 'yield' runs on shutdown.
+
+    Use this for:
+    - Database connection setup/teardown
+    - Background task initialization
+    - Cache warming
+    - Cleanup operations
+    """
+    # Startup
+    print(f"Starting {settings.app_name}...")
+    print(f"Environment: {settings.environment}")
+    print(f"Debug mode: {settings.debug}")
+
+    yield  # Application runs here
+
+    # Shutdown
+    print("Shutting down...")
+
+
+# Create FastAPI application
 app = FastAPI(
-    title="Developer Dashboard API",
-    description="Backend API for GitHub analytics dashboard",
+    title=settings.app_name,
+    description="Backend API for Developer Dashboard - "
+                "GitHub analytics and visualization.",
     version="0.1.0",
-    docs_url="/docs",      # Swagger UI endpoint
-    redoc_url="/redoc",    # ReDoc endpoint (alternative docs)
+    docs_url="/docs",  # Swagger UI
+    redoc_url="/redoc",  # ReDoc
+    openapi_url="/openapi.json",
+    lifespan=lifespan,
 )
 
-# CORS configuration
-# CORS (Cross-Origin Resource Sharing) controls which origins can access the API
-# In Phase 2, we'll load this from environment variables
+# =============================================================================
+# CORS Middleware
+# =============================================================================
+# CORS (Cross-Origin Resource Sharing) controls which origins can access our API.
+# This is essential for the frontend to communicate with the backend.
+
 app.add_middleware(
     CORSMiddleware,
-    # Origins that can access the API (the frontend URL)
-    allow_origins=["http://localhost:3000"],
-    # Allow cookies to be sent with requests (needed for JWT in HTTP-only cookies)
+    # Allow requests from frontend URL
+    allow_origins=[settings.frontend_url],
+    # Allow cookies/credentials (needed for HTTP-only JWT cookie)
     allow_credentials=True,
-    # HTTP methods allowed
+    # Allow all HTTP methods
     allow_methods=["*"],
-    # HTTP headers allowed
+    # Allow all headers
     allow_headers=["*"],
+    # Cache preflight requests for 1 hour
+    max_age=3600,
 )
 
+# =============================================================================
+# Include Routers
+# =============================================================================
 
-@app.get("/health")
+# Authentication routes
+app.include_router(auth_router)
+
+# Placeholder for future routers (Phase 3)
+# app.include_router(users_router)
+# app.include_router(analytics_router)
+
+
+# =============================================================================
+# Root Endpoints
+# =============================================================================
+
+@app.get(
+    "/",
+    summary="API Information",
+    description="Returns basic information about the API.",
+    tags=["General"],
+)
+async def root() -> dict[str, str]:
+    """
+    Root endpoint with API information.
+
+    Provides links to documentation and health check.
+    """
+    return {
+        "name": settings.app_name,
+        "version": "0.1.0",
+        "docs": "/docs",
+        "redoc": "/redoc",
+        "health": "/health",
+    }
+
+
+@app.get(
+    "/health",
+    summary="Health Check",
+    description="Returns the health status of the API.",
+    tags=["General"],
+)
 async def health_check() -> dict[str, str]:
     """
     Health check endpoint.
 
-    Used by Docker and load balancers to verify the service is running.
-    Returns a simple JSON response.
+    Used by:
+    - Docker health checks
+    - Load balancers
+    - Kubernetes readiness probes
+    - Monitoring systems
 
-    Returns:
-        dict: Status information including version
-    """
-    return {"status": "healthy", "version": "0.1.0"}
-
-
-@app.get("/")
-async def root() -> dict[str, str]:
-    """
-    Root endpoint.
-
-    Provides basic API information and links to documentation.
-
-    Returns:
-        dict: API information with documentation links
+    Returns simple healthy status if API is running.
+    Could be extended to check database, cache, etc.
     """
     return {
-        "message": "Developer Dashboard API",
-        "version": "0.1.0",
-        "docs": "/docs",
-        "health": "/health",
+        "status": "healthy",
+        "environment": settings.environment,
     }

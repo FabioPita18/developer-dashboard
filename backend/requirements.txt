@@ -22,6 +22,11 @@ sqlalchemy==2.0.25
 # Required for async SQLAlchemy with PostgreSQL.
 asyncpg==0.29.0
 
+# Greenlet
+# Required by SQLAlchemy for async context switching.
+# Enables running sync code within async engine contexts.
+greenlet==3.3.1
+
 # Database Migrations
 # Alembic is a database migration tool for SQLAlchemy.
 # Used to version control database schema changes.
