@@ -1,19 +1,18 @@
 """
-GitHub API Service.
+GitHub API Service - Extended for Analytics.
 
 This module handles all interactions with the GitHub API:
 - OAuth flow (authorization URL, token exchange)
 - User profile fetching
-- Repository data (expanded in Phase 3)
-- Event data (expanded in Phase 3)
+- Repository listing with pagination
+- Repository language breakdown
+- User events (activity feed)
+- Rate limit monitoring
 
-OAuth Flow Overview:
-    1. User clicks "Login with GitHub"
-    2. We redirect to GitHub's authorization page
-    3. User authorizes our app
-    4. GitHub redirects back with a 'code'
-    5. We exchange the code for an access token
-    6. We use the token to fetch user data
+Pagination:
+    GitHub API uses Link headers for pagination.
+    Most endpoints return max 100 items per page.
+    We handle pagination automatically in get_all_* methods.
 
 Rate Limiting:
     GitHub API has rate limits:
@@ -21,6 +20,7 @@ Rate Limiting:
     - 60 requests/hour for unauthenticated
     We cache responses to stay well under the limit.
 """
+import re
 from typing import Any
 from urllib.parse import urlencode
 
@@ -35,6 +35,62 @@ GITHUB_API_BASE = "https://api.github.com"
 GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
 GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
 
+# Default timeout for API requests (seconds)
+DEFAULT_TIMEOUT = 30.0
+
+
+# =============================================================================
+# Internal Helpers
+# =============================================================================
+
+def _get_auth_headers(access_token: str) -> dict[str, str]:
+    """
+    Build authentication headers for GitHub API requests.
+
+    Using Bearer token format as recommended by GitHub.
+    The API version header pins us to a specific API version.
+    """
+    return {
+        "Authorization": f"Bearer {access_token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+
+
+def _parse_link_header(link_header: str | None) -> dict[str, str]:
+    """
+    Parse GitHub's Link header for pagination.
+
+    GitHub returns pagination info in the Link header:
+    <url>; rel="next", <url>; rel="last"
+
+    Args:
+        link_header: The Link header value
+
+    Returns:
+        Dict mapping rel to URL: {"next": "url", "last": "url"}
+
+    Example:
+        Input:  '<https://api.github.com/repos?page=2>; rel="next"'
+        Output: {"next": "https://api.github.com/repos?page=2"}
+    """
+    if not link_header:
+        return {}
+
+    links = {}
+    # Pattern to match: <url>; rel="name"
+    pattern = r'<([^>]+)>;\s*rel="([^"]+)"'
+
+    for match in re.finditer(pattern, link_header):
+        url, rel = match.groups()
+        links[rel] = url
+
+    return links
+
+
+# =============================================================================
+# OAuth Methods
+# =============================================================================
 
 def get_authorization_url() -> str:
     """
@@ -45,11 +101,6 @@ def get_authorization_url() -> str:
 
     Returns:
         Full URL to redirect user to
-
-    URL Parameters:
-        - client_id: Our GitHub OAuth App ID
-        - redirect_uri: Where to redirect after auth
-        - scope: Permissions we're requesting
     """
     params = {
         "client_id": settings.github_client_id,
@@ -70,19 +121,14 @@ async def exchange_code_for_token(code: str) -> dict[str, Any]:
         code: Authorization code from GitHub redirect
 
     Returns:
-        Dict containing:
-        - access_token: The OAuth token
-        - token_type: Usually "bearer"
-        - scope: Granted permissions
-        OR
-        - error: Error code
-        - error_description: Human-readable error
+        Dict containing access_token, token_type, scope
+        OR error dict if something went wrong
 
     Security Note:
         This exchange happens server-side. The code is single-use
         and expires quickly, preventing replay attacks.
     """
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
         response = await client.post(
             GITHUB_TOKEN_URL,
             data={
@@ -91,15 +137,14 @@ async def exchange_code_for_token(code: str) -> dict[str, Any]:
                 "code": code,
                 "redirect_uri": settings.github_redirect_uri,
             },
-            headers={
-                # Request JSON response instead of form-encoded
-                "Accept": "application/json",
-            },
+            headers={"Accept": "application/json"},
         )
-
-        # GitHub returns 200 even for errors, so check response content
         return response.json()
 
+
+# =============================================================================
+# User Methods
+# =============================================================================
 
 async def get_user_profile(access_token: str) -> dict[str, Any]:
     """
@@ -116,33 +161,13 @@ async def get_user_profile(access_token: str) -> dict[str, Any]:
 
     API Docs:
         https://docs.github.com/en/rest/users/users#get-the-authenticated-user
-
-    Response includes:
-        - id: Unique GitHub ID
-        - login: Username
-        - name: Display name
-        - email: Email (if public or authorized)
-        - avatar_url: Profile picture
-        - bio: Biography
-        - company: Company
-        - location: Location
-        - followers/following: Counts
-        - public_repos: Repository count
     """
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
         response = await client.get(
             f"{GITHUB_API_BASE}/user",
-            headers={
-                "Authorization": f"Bearer {access_token}",
-                "Accept": "application/vnd.github+json",
-                # API version header (recommended)
-                "X-GitHub-Api-Version": "2022-11-28",
-            },
+            headers=_get_auth_headers(access_token),
         )
-
-        # Raise exception for HTTP errors
         response.raise_for_status()
-
         return response.json()
 
 
@@ -158,24 +183,212 @@ async def get_user_emails(access_token: str) -> list[dict[str, Any]]:
 
     Returns:
         List of email dicts with 'email', 'primary', 'verified' fields
-
-    Useful when:
-        User has private email but we need to contact them.
     """
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
         response = await client.get(
             f"{GITHUB_API_BASE}/user/emails",
-            headers={
-                "Authorization": f"Bearer {access_token}",
-                "Accept": "application/vnd.github+json",
-                "X-GitHub-Api-Version": "2022-11-28",
-            },
+            headers=_get_auth_headers(access_token),
         )
-
         response.raise_for_status()
-
         return response.json()
 
+
+# =============================================================================
+# Repository Methods
+# =============================================================================
+
+async def get_user_repos(
+    access_token: str,
+    page: int = 1,
+    per_page: int = 100,
+    sort: str = "updated",
+    direction: str = "desc",
+) -> tuple[list[dict[str, Any]], dict[str, str]]:
+    """
+    Fetch user's repositories (single page).
+
+    Args:
+        access_token: GitHub OAuth token
+        page: Page number (1-indexed)
+        per_page: Items per page (max 100)
+        sort: Sort field (created, updated, pushed, full_name)
+        direction: Sort direction (asc, desc)
+
+    Returns:
+        Tuple of (repos list, pagination links)
+
+    API Docs:
+        https://docs.github.com/en/rest/repos/repos#list-repositories-for-the-authenticated-user
+    """
+    async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
+        response = await client.get(
+            f"{GITHUB_API_BASE}/user/repos",
+            params={
+                "page": page,
+                "per_page": per_page,
+                "sort": sort,
+                "direction": direction,
+                "visibility": "all",  # Include private repos
+                "affiliation": "owner,collaborator,organization_member",
+            },
+            headers=_get_auth_headers(access_token),
+        )
+        response.raise_for_status()
+
+        links = _parse_link_header(response.headers.get("Link"))
+        return response.json(), links
+
+
+async def get_all_repos(access_token: str) -> list[dict[str, Any]]:
+    """
+    Fetch ALL user repositories, handling pagination.
+
+    Automatically fetches all pages until no more data.
+
+    Args:
+        access_token: GitHub OAuth token
+
+    Returns:
+        Complete list of all repositories
+
+    Note:
+        This can make multiple API calls. For users with many repos,
+        consider caching the results.
+    """
+    all_repos: list[dict[str, Any]] = []
+    page = 1
+    max_pages = 50  # Safety limit to prevent infinite loops
+
+    while page <= max_pages:
+        repos, links = await get_user_repos(access_token, page=page)
+        all_repos.extend(repos)
+
+        # Check if there are more pages
+        if "next" not in links or not repos:
+            break
+
+        page += 1
+
+    return all_repos
+
+
+async def get_repo_languages(
+    access_token: str,
+    owner: str,
+    repo: str,
+) -> dict[str, int]:
+    """
+    Get language breakdown for a repository.
+
+    Args:
+        access_token: GitHub OAuth token
+        owner: Repository owner username
+        repo: Repository name
+
+    Returns:
+        Dict mapping language name to bytes of code
+        Example: {"Python": 50000, "JavaScript": 30000}
+
+    API Docs:
+        https://docs.github.com/en/rest/repos/repos#list-repository-languages
+    """
+    async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
+        response = await client.get(
+            f"{GITHUB_API_BASE}/repos/{owner}/{repo}/languages",
+            headers=_get_auth_headers(access_token),
+        )
+        response.raise_for_status()
+        return response.json()
+
+
+# =============================================================================
+# Event Methods (Activity Feed)
+# =============================================================================
+
+async def get_user_events(
+    access_token: str,
+    username: str,
+    page: int = 1,
+    per_page: int = 100,
+) -> tuple[list[dict[str, Any]], dict[str, str]]:
+    """
+    Get user's public events (activity feed).
+
+    Events include pushes, PRs, issues, comments, etc.
+    GitHub keeps only 90 days of events, max 300 total.
+
+    Args:
+        access_token: For authentication (higher rate limits)
+        username: GitHub username
+        page: Page number
+        per_page: Items per page (max 100)
+
+    Returns:
+        Tuple of (events list, pagination links)
+
+    Event Types:
+        - PushEvent: Commits pushed
+        - PullRequestEvent: PR opened/closed/merged
+        - IssuesEvent: Issue opened/closed
+        - CreateEvent: Branch/tag created
+        - DeleteEvent: Branch/tag deleted
+        - WatchEvent: Repository starred
+        - ForkEvent: Repository forked
+
+    API Docs:
+        https://docs.github.com/en/rest/activity/events#list-events-for-the-authenticated-user
+    """
+    async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
+        response = await client.get(
+            f"{GITHUB_API_BASE}/users/{username}/events",
+            params={
+                "page": page,
+                "per_page": per_page,
+            },
+            headers=_get_auth_headers(access_token),
+        )
+        response.raise_for_status()
+
+        links = _parse_link_header(response.headers.get("Link"))
+        return response.json(), links
+
+
+async def get_all_events(access_token: str, username: str) -> list[dict[str, Any]]:
+    """
+    Fetch all available user events.
+
+    GitHub limits to 300 events total (3 pages of 100).
+
+    Args:
+        access_token: GitHub OAuth token
+        username: GitHub username
+
+    Returns:
+        List of all available events (max 300)
+    """
+    all_events: list[dict[str, Any]] = []
+    page = 1
+    max_pages = 3  # GitHub limits to 300 events
+
+    while page <= max_pages:
+        events, links = await get_user_events(
+            access_token,
+            username,
+            page=page,
+        )
+        all_events.extend(events)
+
+        if "next" not in links or not events:
+            break
+
+        page += 1
+
+    return all_events
+
+
+# =============================================================================
+# Rate Limit Utilities
+# =============================================================================
 
 def check_rate_limit_headers(headers: dict) -> dict[str, int]:
     """
@@ -184,14 +397,8 @@ def check_rate_limit_headers(headers: dict) -> dict[str, int]:
     GitHub includes these headers in every API response.
     Useful for monitoring and debugging.
 
-    Headers:
-        - X-RateLimit-Limit: Max requests per hour
-        - X-RateLimit-Remaining: Requests left
-        - X-RateLimit-Reset: Unix timestamp when limit resets
-        - X-RateLimit-Used: Requests used this hour
-
     Returns:
-        Dict with rate limit info
+        Dict with limit, remaining, reset, used
     """
     return {
         "limit": int(headers.get("X-RateLimit-Limit", 5000)),
@@ -199,3 +406,21 @@ def check_rate_limit_headers(headers: dict) -> dict[str, int]:
         "reset": int(headers.get("X-RateLimit-Reset", 0)),
         "used": int(headers.get("X-RateLimit-Used", 0)),
     }
+
+
+async def get_rate_limit(access_token: str) -> dict[str, Any]:
+    """
+    Get current rate limit status.
+
+    Useful for monitoring and debugging.
+
+    API Docs:
+        https://docs.github.com/en/rest/rate-limit
+    """
+    async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
+        response = await client.get(
+            f"{GITHUB_API_BASE}/rate_limit",
+            headers=_get_auth_headers(access_token),
+        )
+        response.raise_for_status()
+        return response.json()

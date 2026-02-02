@@ -17,7 +17,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
+from app.routers.analytics import router as analytics_router
 from app.routers.auth import router as auth_router
+from app.routers.users import router as users_router
 
 settings = get_settings()
 
@@ -86,9 +88,11 @@ app.add_middleware(
 # Authentication routes
 app.include_router(auth_router)
 
-# Placeholder for future routers (Phase 3)
-# app.include_router(users_router)
-# app.include_router(analytics_router)
+# User profile routes
+app.include_router(users_router)
+
+# Analytics data routes
+app.include_router(analytics_router)
 
 
 # =============================================================================
