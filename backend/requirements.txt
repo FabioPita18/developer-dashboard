@@ -35,7 +35,7 @@ alembic==1.13.1
 # Data Validation
 # Pydantic v2 provides data validation using Python type annotations.
 # Major performance improvements over v1.
-pydantic==2.5.3
+pydantic==2.12.5
 
 # Settings Management
 # pydantic-settings allows loading configuration from environment variables.
