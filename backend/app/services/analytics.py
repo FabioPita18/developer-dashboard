@@ -97,12 +97,16 @@ async def get_user_stats(
     public_repos = sum(1 for r in repos if not r.get("private", False))
     private_repos = sum(1 for r in repos if r.get("private", False))
 
-    # Estimate commits from events (rough approximation)
-    events = await github.get_all_events(user.access_token, user.username)
-    total_commits = sum(
-        len(e.get("payload", {}).get("commits", []))
-        for e in events
-        if e.get("type") == "PushEvent"
+    # Get accurate commit count via Search API
+    # Search for all commits by this user in the last year
+    now = datetime.now(timezone.utc)
+    one_year_ago = (now - timedelta(days=365)).strftime("%Y-%m-%d")
+    today = now.strftime("%Y-%m-%d")
+
+    _, total_commits, _ = await github.search_user_commits(
+        user.access_token, user.username,
+        since=one_year_ago, until=today,
+        per_page=1,  # We only need the total_count, not the items
     )
 
     stats = UserStats(
@@ -127,10 +131,18 @@ async def get_contribution_timeline(
     """
     Get contribution timeline for the past N days.
 
-    Processes user events to count daily contributions:
-    - Commits (from PushEvent)
-    - Pull Requests (from PullRequestEvent with action=opened)
-    - Issues (from IssuesEvent with action=opened)
+    Uses two data sources for accuracy:
+    - GitHub Search Commits API for commit counts (more reliable
+      than the Events API, which caps at 300 events and may
+      miss PushEvents)
+    - GitHub Events API for PR and issue counts (these are
+      well-captured by the Events API)
+
+    Why not just Events API?
+        The Events API has a hard limit of 300 events and doesn't
+        reliably surface all PushEvents. The Search Commits API
+        returns actual commit objects, matching what GitHub shows
+        on your profile.
 
     Args:
         db: Database session
@@ -147,25 +159,51 @@ async def get_contribution_timeline(
     if cached:
         return [ContributionPoint(**p) for p in cached]
 
-    # Fetch events
-    events = await github.get_all_events(user.access_token, user.username)
+    # Calculate date range
+    now = datetime.now(timezone.utc)
+    since_date = (now - timedelta(days=days)).strftime("%Y-%m-%d")
+    until_date = now.strftime("%Y-%m-%d")
 
     # Initialize daily buckets
-    # Use timezone-aware cutoff since GitHub event timestamps include timezone info
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     daily_data: dict[str, dict[str, int]] = defaultdict(
         lambda: {"commits": 0, "pull_requests": 0, "issues": 0}
     )
 
+    # --- Fetch commits via Search API (accurate commit counts) ---
+    commits = await github.get_all_user_commits(
+        user.access_token, user.username,
+        since=since_date, until=until_date,
+    )
+
+    for commit in commits:
+        # The search result has commit.committer.date for the commit date
+        commit_data = commit.get("commit", {})
+        committer = commit_data.get("committer", {})
+        date_str = committer.get("date", "")
+
+        if not date_str:
+            continue
+
+        try:
+            commit_date = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+            date_key = commit_date.strftime("%Y-%m-%d")
+            daily_data[date_key]["commits"] += 1
+        except ValueError:
+            continue
+
+    # --- Fetch PRs and issues from Events API ---
+    # Events API is fine for PRs/issues since these are fewer
+    # and well-captured as PullRequestEvent/IssuesEvent
+    cutoff = now - timedelta(days=days)
+    events = await github.get_all_events(user.access_token, user.username)
+
     for event in events:
-        # Parse event timestamp
         created_at_str = event.get("created_at", "")
         try:
             created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
         except ValueError:
             continue
 
-        # Skip events outside our window
         if created_at < cutoff:
             continue
 
@@ -173,12 +211,7 @@ async def get_contribution_timeline(
         event_type = event.get("type", "")
         payload = event.get("payload", {})
 
-        if event_type == "PushEvent":
-            # Count commits in this push
-            commits = len(payload.get("commits", []))
-            daily_data[date_key]["commits"] += commits
-
-        elif event_type == "PullRequestEvent":
+        if event_type == "PullRequestEvent":
             if payload.get("action") == "opened":
                 daily_data[date_key]["pull_requests"] += 1
 
@@ -186,13 +219,10 @@ async def get_contribution_timeline(
             if payload.get("action") == "opened":
                 daily_data[date_key]["issues"] += 1
 
-    # Convert to list of ContributionPoints
-    # Include all days in range, even if zero activity
+    # Build result list with all days in range (including zeros)
     result = []
-    current = datetime.utcnow()
-
     for i in range(days):
-        date = current - timedelta(days=i)
+        date = now - timedelta(days=i)
         date_key = date.strftime("%Y-%m-%d")
         data = daily_data.get(date_key, {"commits": 0, "pull_requests": 0, "issues": 0})
 

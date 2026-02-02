@@ -97,6 +97,33 @@ def mock_events():
     ]
 
 
+@pytest.fixture
+def mock_search_commits():
+    """
+    Sample commit search results matching GitHub Search Commits API.
+
+    The Search API returns a different structure than the Events API:
+    each item has a 'commit' object with 'committer.date'.
+    """
+    now = datetime.utcnow().isoformat() + "Z"
+    return [
+        {
+            "sha": "abc123",
+            "commit": {
+                "message": "feat: add feature",
+                "committer": {"date": now},
+            },
+        },
+        {
+            "sha": "def456",
+            "commit": {
+                "message": "fix: bug fix",
+                "committer": {"date": now},
+            },
+        },
+    ]
+
+
 class TestUserStats:
     """Tests for /api/analytics/stats endpoint."""
 
@@ -108,13 +135,14 @@ class TestUserStats:
 
     @pytest.mark.asyncio
     async def test_stats_success(
-        self, client, test_user, auth_headers, mock_repos, mock_events
+        self, client, test_user, auth_headers, mock_repos
     ):
         """Test successful stats retrieval."""
         with patch("app.services.github.get_all_repos") as mock_get_repos:
-            with patch("app.services.github.get_all_events") as mock_get_events:
+            with patch("app.services.github.search_user_commits") as mock_search:
                 mock_get_repos.return_value = mock_repos
-                mock_get_events.return_value = mock_events
+                # search_user_commits returns (items, total_count, links)
+                mock_search.return_value = ([], 42, {})
 
                 response = await client.get(
                     "/api/analytics/stats",
@@ -127,6 +155,7 @@ class TestUserStats:
                 assert data["total_forks"] == 30   # 20 + 10
                 assert data["public_repos"] == 1
                 assert data["private_repos"] == 1
+                assert data["total_commits"] == 42
 
 
 class TestLanguages:
@@ -164,37 +193,41 @@ class TestContributions:
 
     @pytest.mark.asyncio
     async def test_contributions_default_days(
-        self, client, test_user, auth_headers, mock_events
+        self, client, test_user, auth_headers, mock_events, mock_search_commits
     ):
         """Test contributions with default 30 days."""
-        with patch("app.services.github.get_all_events") as mock_get_events:
-            mock_get_events.return_value = mock_events
+        with patch("app.services.github.get_all_user_commits") as mock_commits:
+            with patch("app.services.github.get_all_events") as mock_get_events:
+                mock_commits.return_value = mock_search_commits
+                mock_get_events.return_value = mock_events
 
-            response = await client.get(
-                "/api/analytics/contributions",
-                headers=auth_headers,
-            )
+                response = await client.get(
+                    "/api/analytics/contributions",
+                    headers=auth_headers,
+                )
 
-            assert response.status_code == 200
-            data = response.json()
-            assert len(data) == 30
+                assert response.status_code == 200
+                data = response.json()
+                assert len(data) == 30
 
     @pytest.mark.asyncio
     async def test_contributions_custom_days(
-        self, client, test_user, auth_headers, mock_events
+        self, client, test_user, auth_headers, mock_events, mock_search_commits
     ):
         """Test contributions with custom day count."""
-        with patch("app.services.github.get_all_events") as mock_get_events:
-            mock_get_events.return_value = mock_events
+        with patch("app.services.github.get_all_user_commits") as mock_commits:
+            with patch("app.services.github.get_all_events") as mock_get_events:
+                mock_commits.return_value = mock_search_commits
+                mock_get_events.return_value = mock_events
 
-            response = await client.get(
-                "/api/analytics/contributions?days=7",
-                headers=auth_headers,
-            )
+                response = await client.get(
+                    "/api/analytics/contributions?days=7",
+                    headers=auth_headers,
+                )
 
-            assert response.status_code == 200
-            data = response.json()
-            assert len(data) == 7
+                assert response.status_code == 200
+                data = response.json()
+                assert len(data) == 7
 
 
 class TestRepositories:

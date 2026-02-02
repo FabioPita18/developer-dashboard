@@ -387,6 +387,106 @@ async def get_all_events(access_token: str, username: str) -> list[dict[str, Any
 
 
 # =============================================================================
+# Commit Search Methods
+# =============================================================================
+
+
+async def search_user_commits(
+    access_token: str,
+    username: str,
+    since: str,
+    until: str,
+    page: int = 1,
+    per_page: int = 100,
+) -> tuple[list[dict[str, Any]], int, dict[str, str]]:
+    """
+    Search for commits by a user within a date range.
+
+    Uses the GitHub Search Commits API which is more reliable
+    than the Events API for counting actual commits.
+
+    The Events API has a 300-event cap and doesn't reliably
+    capture all PushEvents, whereas the Search API returns
+    actual commit objects.
+
+    Args:
+        access_token: GitHub OAuth token
+        username: GitHub username (commit author)
+        since: Start date in YYYY-MM-DD format
+        until: End date in YYYY-MM-DD format
+        page: Page number (1-indexed)
+        per_page: Items per page (max 100)
+
+    Returns:
+        Tuple of (commit items list, total count, pagination links)
+
+    API Docs:
+        https://docs.github.com/en/rest/search/search#search-commits
+    """
+    query = f"author:{username} committer-date:{since}..{until}"
+
+    async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
+        response = await client.get(
+            f"{GITHUB_API_BASE}/search/commits",
+            params={
+                "q": query,
+                "page": page,
+                "per_page": per_page,
+                "sort": "committer-date",
+                "order": "asc",
+            },
+            headers=_get_auth_headers(access_token),
+        )
+        response.raise_for_status()
+
+        data = response.json()
+        links = _parse_link_header(response.headers.get("Link"))
+
+        return data.get("items", []), data.get("total_count", 0), links
+
+
+async def get_all_user_commits(
+    access_token: str,
+    username: str,
+    since: str,
+    until: str,
+) -> list[dict[str, Any]]:
+    """
+    Fetch all commits by a user within a date range.
+
+    Handles pagination automatically. GitHub Search API
+    returns max 1000 results, which is sufficient for
+    a 30-day contribution timeline.
+
+    Args:
+        access_token: GitHub OAuth token
+        username: GitHub username
+        since: Start date YYYY-MM-DD
+        until: End date YYYY-MM-DD
+
+    Returns:
+        List of all commit search result items
+    """
+    all_commits: list[dict[str, Any]] = []
+    page = 1
+    max_pages = 10  # 10 pages x 100 = 1000 commits max
+
+    while page <= max_pages:
+        commits, total_count, links = await search_user_commits(
+            access_token, username, since, until,
+            page=page,
+        )
+        all_commits.extend(commits)
+
+        if "next" not in links or not commits:
+            break
+
+        page += 1
+
+    return all_commits
+
+
+# =============================================================================
 # Rate Limit Utilities
 # =============================================================================
 
