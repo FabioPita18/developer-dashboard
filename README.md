@@ -2,6 +2,8 @@
 
 > Full-stack GitHub analytics dashboard — visualize contributions, languages, and coding patterns.
 
+**Live Demo:** [https://frontend-production-fdcb.up.railway.app](https://frontend-production-fdcb.up.railway.app) | **API Docs:** [https://backend-production-44be.up.railway.app/docs](https://backend-production-44be.up.railway.app/docs)
+
 [![Backend CI](https://github.com/FabioPita18/developer-dashboard/actions/workflows/backend.yml/badge.svg)](https://github.com/FabioPita18/developer-dashboard/actions/workflows/backend.yml)
 [![Frontend CI](https://github.com/FabioPita18/developer-dashboard/actions/workflows/frontend.yml/badge.svg)](https://github.com/FabioPita18/developer-dashboard/actions/workflows/frontend.yml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128.0-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
