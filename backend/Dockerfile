@@ -76,15 +76,16 @@ COPY --chown=appuser:appgroup . .
 # Switch to non-root user
 USER appuser
 
-# Expose port
-EXPOSE 8000
+# Expose port (Railway injects PORT at runtime, default 8000 for local dev)
+EXPOSE ${PORT:-8000}
 
 # Health check
 # Checks if the /health endpoint responds with 200
-# Used by Docker/Kubernetes to know if container is healthy
+# Used by Docker/Kubernetes/Railway to know if container is healthy
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
 # Run the application
-# Using exec form to ensure signals are properly forwarded
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Using shell form so ${PORT} is expanded at runtime
+# Railway auto-injects PORT; falls back to 8000 for local development
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}

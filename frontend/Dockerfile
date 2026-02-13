@@ -4,6 +4,9 @@
 # Multi-stage build:
 # 1. Build stage: Install deps and build
 # 2. Production stage: Serve with Nginx
+#
+# Railway injects PORT at runtime. We use envsubst to render
+# nginx.conf.template with the correct port and backend URL.
 
 # -----------------------------------------------------------------------------
 # Stage 1: Build
@@ -35,18 +38,23 @@ FROM nginx:alpine as production
 LABEL maintainer="Developer Dashboard"
 LABEL description="React frontend for Developer Dashboard"
 
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx config template (substituted at startup)
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
 # Copy built files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# Default environment variables (Railway overrides PORT at runtime)
+ENV PORT=3000
+ENV BACKEND_URL=http://backend:8000
+
 # Expose port
-EXPOSE 3000
+EXPOSE ${PORT}
 
-# Health check
+# Health check using the dynamic port
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT} || exit 1
 
-# Start nginx
+# nginx:alpine image auto-runs envsubst on /etc/nginx/templates/*.template
+# and outputs to /etc/nginx/conf.d/ before starting nginx
 CMD ["nginx", "-g", "daemon off;"]
